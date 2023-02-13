@@ -124,10 +124,11 @@ async function run() {
 
     // 1st pass: for each document create a new row and store id in a map
     for (const model of models) {
+      console.log("Parsing", model.uid)
       const cursor = db.collection(model.collectionName).find();
-
       while (await cursor.hasNext()) {
         const entry = await cursor.next();
+
         const row = transformEntry(entry, model);
 
         row.id = idMap.next(entry._id, model.collectionName);
