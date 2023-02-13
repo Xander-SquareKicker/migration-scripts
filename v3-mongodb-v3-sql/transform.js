@@ -1,5 +1,7 @@
 const _ = require('lodash/fp');
-const ID_FIELD_NAME = "id"
+
+const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugin::users-permissions.user"]
+
 const isScalar = (attribute) =>
   _.has('type', attribute) && !['component', 'dynamiczone'].includes(attribute.type);
 
@@ -23,8 +25,12 @@ const getTimestampKeys = (model) => {
 };
 
 function transformEntry(entry, model) {
-  // transform attributes
+   // transform attributes
   const res = {};
+
+  //Populate custom sql field - Uuid field does not exist in mongo
+  if(modelsWithUuid.includes(model.uid))
+    res['uuid'] = entry._id.toString();
 
   const [createdAtKey, updatedAtKey] = getTimestampKeys(model);
 
@@ -35,14 +41,10 @@ function transformEntry(entry, model) {
   if (updatedAtKey) {
     res.updated_at = entry[updatedAtKey];
   }
-
-  res.uuid = entry[ID_FIELD_NAME];//Save uuid to be inserted
-
   //Looks through via 'model' attributes perspective
   Object.entries(model.attributes).forEach(([key, attribute]) => {
-
     if (isScalar(attribute)) {
-
+      
       if(!Object.keys(entry).includes(key)){//Handle missing 'default' values
         if(attribute.default && attribute.type === 'json') res[key] = JSON.stringify(attribute.default)
         else if (attribute.default) res[key] = attribute.default;
