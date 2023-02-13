@@ -11,6 +11,13 @@ const mongo = require('./mongo');
 const { transformEntry } = require('./transform');
 const idMap = require('./id-map');
 
+/**
+ * Combines 'pluginName'(if applicable) and 'content-type name' together to form a unique table name
+ * @param {*} model core_store object
+ * @param {*} modelName model.uid stripped of 'plugin::<plugin_name>.' or 'api::<api-name>.', or 'admin::'
+ * @param {*} prefix plugin name - or 'component_'
+ * @returns globally unique table name
+ */
 const getGlobalId = (model, modelName, prefix) => {
   let globalId = prefix ? `${prefix}-${modelName}` : modelName;
 
@@ -40,6 +47,11 @@ const getCollectionName = (associationA, associationB) => {
     .join('__');
 };
 
+/**
+ * Fetch content-type schema, and parse based on type
+ * @param {*} db 
+ * @returns model information, plugin(e.g. admin, users-permissions), modelName (e.g. website, sk-token, user), globalID (unique model name)
+ */
 async function getModelDefs(db) {
   const coreStore = db.collection('core_store');
 
@@ -51,7 +63,8 @@ async function getModelDefs(db) {
     .map((item) => JSON.parse(item.value))
     .map((model) => {
       const { uid } = model;
-
+      
+      //Handle components
       if (!model.uid.includes('::')) {
         return {
           ...model,
@@ -64,6 +77,7 @@ async function getModelDefs(db) {
       let apiName;
       let modelName;
 
+      //UID format: '<type>::<api-name>.<conent-name>'
       if (uid.startsWith('strapi::')) {
         plugin = 'admin';
         modelName = uid.split('::')[1];
@@ -91,12 +105,14 @@ async function getModelDefs(db) {
 
 async function run() {
   try {
+    //Setup DBs
     await mongo.connect();
 
     const db = mongo.db();
 
     const models = await getModelDefs(db);
 
+    //Map models to key/value pairs using uid name
     const modelMap = models.reduce((acc, model) => {
       acc[model.uid] = model;
       return acc;
@@ -184,6 +200,7 @@ async function run() {
             continue;
           }
 
+          //Single file model
           if (attribute.model === 'file' && attribute.plugin === 'upload') {
             if (!entry[key]) {
               continue;
@@ -200,6 +217,7 @@ async function run() {
             await knex('upload_file_morph').insert(row);
           }
 
+          //Multiple files
           if (attribute.collection === 'file' && attribute.plugin === 'upload') {
             const rows = entry[key].map((e, idx) => ({
               upload_file_id: idMap.get(e),

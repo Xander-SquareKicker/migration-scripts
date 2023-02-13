@@ -1,5 +1,5 @@
 const _ = require('lodash/fp');
-
+const ID_FIELD_NAME = "id"
 const isScalar = (attribute) =>
   _.has('type', attribute) && !['component', 'dynamiczone'].includes(attribute.type);
 
@@ -36,14 +36,19 @@ function transformEntry(entry, model) {
     res.updated_at = entry[updatedAtKey];
   }
 
-  Object.keys(entry).forEach((key) => {
-    const attribute = model.attributes[key];
+  res.uuid = entry[ID_FIELD_NAME];//Save uuid to be inserted
 
-    if (!attribute) {
-      return;
-    }
+  //Looks through via 'model' attributes perspective
+  Object.entries(model.attributes).forEach(([key, attribute]) => {
 
     if (isScalar(attribute)) {
+
+      if(!Object.keys(entry).includes(key)){//Handle missing 'default' values
+        if(attribute.default && attribute.type === 'json') res[key] = JSON.stringify(attribute.default)
+        else if (attribute.default) res[key] = attribute.default;
+        return;
+      }
+
       if (attribute.type === 'json') {
         res[key] = JSON.stringify(entry[key]);
         return;
