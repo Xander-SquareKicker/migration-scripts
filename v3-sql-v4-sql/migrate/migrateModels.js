@@ -38,7 +38,6 @@ async function migrateModels(tables) {
         omitAttributes.push(key);
       }
     }
-    console.log('Collecition def', modelDef)
     await migrate(modelDef.collectionName, pluralize(modelDef.collectionName, 2), (item) => {
       if (modelDef.options.timestamps === false) {
         return migrateItem(item);
