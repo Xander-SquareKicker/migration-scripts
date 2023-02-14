@@ -1,7 +1,7 @@
 const _ = require('lodash/fp');
 
-const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugin::users-permissions.user"]
-const modelsWithDeleted = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugin::users-permissions.user"]
+const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
+const modelsWithDeleted = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
 
 const isScalar = (attribute) =>
   _.has('type', attribute) && !['component', 'dynamiczone'].includes(attribute.type);
