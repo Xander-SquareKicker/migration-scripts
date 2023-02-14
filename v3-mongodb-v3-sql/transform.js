@@ -1,6 +1,7 @@
 const _ = require('lodash/fp');
 
 const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugin::users-permissions.user"]
+const modelsWithDeleted = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugin::users-permissions.user"]
 
 const isScalar = (attribute) =>
   _.has('type', attribute) && !['component', 'dynamiczone'].includes(attribute.type);
@@ -31,6 +32,9 @@ function transformEntry(entry, model) {
   //Populate custom sql field - Uuid field does not exist in mongo
   if(modelsWithUuid.includes(model.uid))
     res['uuid'] = entry._id.toString();
+
+  if(modelsWithDeleted.includes(model.uid))
+    res['deleted'] = entry.deleted || false;
 
   const [createdAtKey, updatedAtKey] = getTimestampKeys(model);
 
