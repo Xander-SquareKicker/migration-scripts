@@ -67,6 +67,8 @@ async function migrateUsersData() {
     const items = await dbV3(resolveSourceTableName(source))
       .limit(BATCH_SIZE)
       .offset(page * BATCH_SIZE);
+
+      //SK Dev hotfix
       items.map((item) =>{
         item['stripePaymentMethods'] = JSON.stringify(item['stripePaymentMethods'])//Postgres struggles to convert 'array' to JSON
       })
