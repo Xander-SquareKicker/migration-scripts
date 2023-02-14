@@ -67,6 +67,9 @@ async function migrateUsersData() {
     const items = await dbV3(resolveSourceTableName(source))
       .limit(BATCH_SIZE)
       .offset(page * BATCH_SIZE);
+      items.map((item) =>{
+        item['stripePaymentMethods'] = JSON.stringify(item['stripePaymentMethods'])//Postgres struggles to convert 'array' to JSON
+      })
     const migratedItems = migrateItems(items, ({ role, ...item }) => migrateItem(item));
     const roleLinks = items.map((item) => ({
       user_id: item.id,
