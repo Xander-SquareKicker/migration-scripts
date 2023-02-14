@@ -2,12 +2,12 @@ const { omit } = require('lodash');
 const { dbV3 } = require('../config/database');
 const { migrate } = require('./helpers/migrate');
 const { migrateItem } = require('./helpers/migrateFields');
-
+const pluralize = require('pluralize');
 const { processRelation, migrateRelations } = require('./helpers/relationHelpers');
 const { resolveSourceTableName } = require('./helpers/tableNameHelpers');
 
 var relations = [];
-const skipAttributes = ['created_by', 'updated_by'];
+const skipAttributes = ['created_by', 'updated_by', 'kickers', 'ss_users'];
 
 async function migrateModels(tables) {
   console.log('Migrating Models');
@@ -19,7 +19,7 @@ async function migrateModels(tables) {
 
   for (const modelDefEntry of modelsDefs) {
     const modelDef = JSON.parse(modelDefEntry.value);
-
+ 
     const omitAttributes = [];
     for (const [key, value] of Object.entries(modelDef.attributes)) {
       if (skipAttributes.includes(key)) {
@@ -38,7 +38,8 @@ async function migrateModels(tables) {
         omitAttributes.push(key);
       }
     }
-    await migrate(modelDef.collectionName, modelDef.collectionName, (item) => {
+    console.log('Collecition def', modelDef)
+    await migrate(modelDef.collectionName, pluralize(modelDef.collectionName, 2), (item) => {
       if (modelDef.options.timestamps === false) {
         return migrateItem(item);
       } else {
