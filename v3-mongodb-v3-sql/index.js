@@ -57,7 +57,7 @@ async function getModelDefs(db) {
 
   const cursor = coreStore.find({
     key: { $regex: /^model_def/ },
-  });
+  }).sort({$natural:-1});//'Role' model must be handled BEFORE permissions, during relation creation
 
   const res = (await cursor.toArray())
     .map((item) => JSON.parse(item.value))
@@ -125,7 +125,7 @@ async function run() {
     // 1st pass: for each document create a new row and store id in a map
     for (const model of models) {
       console.log("Parsing", model.uid)
-      const cursor = db.collection(model.collectionName).find();
+      const cursor = db.collection(model.collectionName).find()
       while (await cursor.hasNext()) {
         const entry = await cursor.next();
 
