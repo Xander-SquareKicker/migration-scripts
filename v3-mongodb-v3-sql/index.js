@@ -57,7 +57,7 @@ async function getModelDefs(db) {
 
   const cursor = coreStore.find({
     key: { $regex: /^model_def/ },
-  }).sort({$natural:-1});//'Role' model must be handled BEFORE permissions, during relation creation
+  }).sort({$natural:-1});//Hot fix - 'Role' model must be handled BEFORE permissions, during relation creation
 
   const res = (await cursor.toArray())
     .map((item) => JSON.parse(item.value))
