@@ -1,5 +1,6 @@
 const _ = require('lodash/fp');
 
+//Must manually specifiy the models that follow this connection - application for 'api::', 'plugins' for 'plugin::'
 const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
 const modelsWithDeleted = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
 
