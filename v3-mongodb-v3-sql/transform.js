@@ -30,12 +30,15 @@ function transformEntry(entry, model) {
    // transform attributes
   const res = {};
 
+  /// SQUAREKICKER CUSTOMISATION
   //Populate custom sql field - Uuid field does not exist in mongo
   if(modelsWithUuid.includes(model.uid))
     res['uuid'] = entry._id.toString();
 
   if(modelsWithDeleted.includes(model.uid))
     res['deleted'] = entry.deleted || false;
+/// SQUAREKICKER CUSTOMISATION
+
 
   const [createdAtKey, updatedAtKey] = getTimestampKeys(model);
 
@@ -50,11 +53,13 @@ function transformEntry(entry, model) {
   Object.entries(model.attributes).forEach(([key, attribute]) => {
     if (isScalar(attribute)) {
       
+      /// SQUAREKICKER CUSTOMISATION
       if(!Object.keys(entry).includes(key)){//Handle missing 'default' values
         if(attribute.default && attribute.type === 'json') res[key] = JSON.stringify(attribute.default)
         else if (attribute.default) res[key] = attribute.default;
         return;
       }
+      /// SQUAREKICKER CUSTOMISATION  
 
       if (attribute.type === 'json') {
         res[key] = JSON.stringify(entry[key]);

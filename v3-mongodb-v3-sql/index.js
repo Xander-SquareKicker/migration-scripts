@@ -55,9 +55,11 @@ const getCollectionName = (associationA, associationB) => {
 async function getModelDefs(db) {
   const coreStore = db.collection('core_store');
 
+  /// SQUAREKICKER CUSTOMISATION
   const cursor = coreStore.find({
     key: { $regex: /^model_def/ },
   }).sort({$natural:-1});//Hot fix - 'Role' model must be handled BEFORE permissions, during relation creation
+/// SQUAREKICKER CUSTOMISATION
 
   const res = (await cursor.toArray())
     .map((item) => JSON.parse(item.value))
