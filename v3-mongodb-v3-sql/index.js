@@ -125,24 +125,28 @@ async function run() {
     await dialect.beforeMigration?.(knex);
 
     // 1st pass: for each document create a new row and store id in a map
+
     for (const model of models) {
-      console.log("Parsing", model.uid)
+      let totalCount = await db.collection(model.collectionName).countDocuments();
+      console.log("Parsing", model.uid, `with ${totalCount} documents`)
+
       const cursor = db.collection(model.collectionName).find()
+      let rowCount = 0;
       while (await cursor.hasNext()) {
         const entry = await cursor.next();
 
         const row = transformEntry(entry, model);
-
         row.id = idMap.next(entry._id, model.collectionName);
 
-        await knex(model.collectionName).insert(row);
+        await knex(model.collectionName).insert(row); 
+        rowCount++;    
       }
-
+      console.log(`Inserted ${rowCount}/${totalCount}`)
       await cursor.close();
     }
 
     // 2nd pass: for each document's components & relations create the links in the right tables
-
+    console.log("Filling in relations...")
     for (const model of models) {
       const cursor = db.collection(model.collectionName).find();
 
