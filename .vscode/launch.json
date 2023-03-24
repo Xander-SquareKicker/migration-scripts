@@ -1,0 +1,36 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "1.0.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mongo to SQL v3",
+      "cwd": "${workspaceFolder}/v3-mongodb-v3-sql",
+      "program": "./index.js",
+      "runtimeArgs": [
+      ],
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "SQL v3 to SQL v4",
+      "cwd": "${workspaceFolder}/v3-sql-v4-sql",
+      "program": "./index.js",
+      "runtimeArgs": [
+      ],
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 const _ = require('lodash/fp');
+const {
+  modelsWithUuidAndDeleted,
+} = require('./extensions');
 
-//Must manually specifiy the models that follow this connection - application for 'api::', 'plugins' for 'plugin::'
-const modelsWithUuid = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
-const modelsWithDeleted = ["application::website.website", "application::plan.plan", "application::sk-token.sk-token", "application::sk-request.sk-request", "application::sk-memory.sk-memory", "plugins::users-permissions.user"]
 
 const isScalar = (attribute) =>
   _.has('type', attribute) && !['component', 'dynamiczone'].includes(attribute.type);
@@ -26,18 +26,67 @@ const getTimestampKeys = (model) => {
   return tsOption;
 };
 
-function transformEntry(entry, model) {
+function transformEntry(entry, model, adminUserIdMap) {
    // transform attributes
   const res = {};
 
   /// SQUAREKICKER CUSTOMISATION
   //Populate custom sql field - Uuid field does not exist in mongo
-  if(modelsWithUuid.includes(model.uid))
-    res['uuid'] = entry._id.toString();
+  if(modelsWithUuidAndDeleted.includes(model.uid)) {
+    entry.uuid = entry._id.toString();
+    entry.deleted = entry.deleted || false;
+  }
 
-  if(modelsWithDeleted.includes(model.uid))
-    res['deleted'] = entry.deleted || false;
-/// SQUAREKICKER CUSTOMISATION
+  // RA Sewell 24.03.23
+  // Map the created_by / updated_by ids
+  if (entry.created_by) {
+    const v = adminUserIdMap[entry.created_by];
+    if (v) {
+      entry.created_by = v;
+    }
+  }
+  if (entry.updated_by) {
+    const v = adminUserIdMap[entry.updated_by];
+    if (v) {
+      entry.updated_by = v;
+    }
+  }
+
+  // RA Sewell 23.03.23
+  // Fix entries in the subscription table
+  if (model.uid === 'application::subscription.subscription') {
+    if (entry.activationDate === '') {
+      entry.activationDate = null;
+    }
+  }
+
+
+  // RA Sewell 12.03.23
+  // Ensure all required fields exist in all data, adding fields that don't exist
+  for ([attrKey,attrValue] of Object.entries(model.attributes)) {
+    if (attrValue.required) {
+      const entryHasAttribute = Object.prototype.hasOwnProperty.call(entry, attrKey);
+      const modelHasDefault = Object.prototype.hasOwnProperty.call(attrValue, 'default');
+      if (!entryHasAttribute) {
+        // The attribute is required, but the entry has no attribute - set the default
+        if (modelHasDefault) {
+          console.log(`Adding missing attribute '${attrKey}' to entry '${entry._id}' of '${model.uid}'`)
+          entry[attrKey] = attrValue.default;
+        } else {
+          throw new Error(`Entry '${entry._id}' of '${model.uid}' is missing required model attribute '${attrKey}', and there is no default`, model, entry);
+        }
+      }
+    }
+  }
+
+  // RA Sewell 12.03.23
+  // Drop any 'kickers' relations from any tables as they are no longer supported
+  if (entry.kickers) {
+    console.log(`Deleting 'kickers' from entry '${entry._id}' of '${model.uid}'`)
+    delete entry.kickers;
+  }
+
+  /// END: SQUAREKICKER CUSTOMISATION
 
 
   const [createdAtKey, updatedAtKey] = getTimestampKeys(model);
@@ -52,14 +101,6 @@ function transformEntry(entry, model) {
   //Looks through via 'model' attributes perspective
   Object.entries(model.attributes).forEach(([key, attribute]) => {
     if (isScalar(attribute)) {
-      
-      /// SQUAREKICKER CUSTOMISATION
-      if(!Object.keys(entry).includes(key)){//Handle missing 'default' values
-        if(attribute.default && attribute.type === 'json') res[key] = JSON.stringify(attribute.default)
-        else if (attribute.default) res[key] = attribute.default;
-        return;
-      }
-      /// SQUAREKICKER CUSTOMISATION  
 
       if (attribute.type === 'json') {
         res[key] = JSON.stringify(entry[key]);
