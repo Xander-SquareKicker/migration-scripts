@@ -20,7 +20,7 @@ function addRelation(
     type,
     modelF,
     attributeF,
-    table: `${snakeCase(model)}_${snakeCase(attribute)}_links`,
+    table: `${snakeCase(pluralize(model))}_${snakeCase(attribute)}_links`,
     entityName,
   });
 }
@@ -154,6 +154,21 @@ async function migrateRelations(tables, relations) {
       (row) => row.table_name || row.TABLE_NAME
     );
   }
+
+
+  // RA Sewell 31.03.23: Filter just the tables that are link tables
+  v4Tables = v4Tables.filter((t) => t.endsWith('links'));
+
+  // Filter out created_by / updated_by relations which are not stored in link tables
+  relations = relations.filter(({ table }) => {
+    const keep = table.indexOf('created_by') === -1 && table.indexOf('updated_by') === -1;
+    return keep;
+  });
+
+  // RA Sewell 31.03.23: Log relationships and link tables
+  console.log(JSON.stringify(relations.map(r => r.table), null, 2));
+  console.log('\n');
+  console.log(JSON.stringify(v4Tables, null, 2));
 
   relations = relations.filter((r) => v4Tables.includes(r.table));
 
