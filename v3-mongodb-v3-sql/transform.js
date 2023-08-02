@@ -43,12 +43,16 @@ function transformEntry(entry, model, adminUserIdMap) {
     const v = adminUserIdMap[entry.created_by];
     if (v) {
       entry.created_by = v;
+    } else {
+      entry.created_by = undefined;
     }
   }
   if (entry.updated_by) {
     const v = adminUserIdMap[entry.updated_by];
     if (v) {
       entry.updated_by = v;
+    } else {
+      entry.updated_by = undefined;
     }
   }
 
